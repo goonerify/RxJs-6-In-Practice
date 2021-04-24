@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs/internal/Observable';
-import { map } from 'rxjs/operators';
+import { map, shareReplay, tap } from 'rxjs/operators';
 import { createHttpObservable } from '../common/util';
 import { Course } from '../model/course';
 
@@ -21,7 +21,11 @@ export class HomeComponent implements OnInit {
     // A subscription is an instance of an observable.
     // Without subscribing to an observable, all you have
     // is a 'declaration' of the observable
-    const courses$ = http$.pipe(map((res) => res.payload));
+    const courses$ = http$.pipe(
+      tap(() => console.log('HTTP Request executed')),
+      map((res) => res.payload),
+      shareReplay()
+    );
 
     this.beginnerCourses$ = courses$.pipe(
       map((courses) =>
