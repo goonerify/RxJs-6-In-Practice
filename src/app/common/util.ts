@@ -1,17 +1,8 @@
 import { Observable } from 'rxjs/internal/Observable';
-
-interface Payload {
-  category: string;
-  courseListIcon: string;
-  description: string;
-  iconUrl: string;
-  id: number;
-  lessonsCount: number;
-  longDescription: string;
-}
+import { Course } from '../model/course';
 
 export function createHttpObservable(url: string) {
-  return new Observable<{ payload: Payload[] }>((observer) => {
+  return new Observable<{ payload: Course[] }>((observer) => {
     fetch(url)
       .then((response) => {
         return response.json();
