@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { noop, Observable } from 'rxjs';
+import { noop } from 'rxjs';
+import { map } from 'rxjs/internal/operators/map';
+import { createHttpObservable } from '../common/util';
 
 @Component({
   selector: 'about',
@@ -19,19 +21,14 @@ export class AboutComponent implements OnInit {
     // const click$ = fromEvent(document, 'click');
     // click$.subscribe((evt) => console.dir(evt));
 
-    const http$ = new Observable((observer) => {
-      fetch('/api/courses')
-        .then((response) => {
-          return response.json();
-        })
-        .then((data) => {
-          observer.next(data);
-          observer.complete();
-        })
-        .catch((err) => {
-          observer.error(err);
-        });
-    });
+    const http$ = createHttpObservable('/api/courses');
+
+    // A subscription is an instance of an observable.
+    // Without subscribing to an observable, all you have
+    // is a 'declaration' of the observable
+    const sub = http$
+      .pipe(map((res) => res.payload))
+      .subscribe((vals) => console.dir(vals));
 
     http$.subscribe({
       next: (data) => console.dir(data),
