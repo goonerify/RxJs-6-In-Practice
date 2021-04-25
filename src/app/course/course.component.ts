@@ -6,9 +6,14 @@ import {
   ViewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { concat, fromEvent, Observable } from 'rxjs';
+import { fromEvent, Observable } from 'rxjs';
 import { map } from 'rxjs/internal/operators/map';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  startWith,
+  switchMap,
+} from 'rxjs/operators';
 import { createHttpObservable } from '../common/util';
 import { Course } from '../model/course';
 import { Lesson } from '../model/lesson';
@@ -36,11 +41,10 @@ export class CourseComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    const searchLessons$ = fromEvent<any>(
-      this.input.nativeElement,
-      'keyup'
-    ).pipe(
+    // const searchLessons$ = fromEvent<any>(
+    this.lessons$ = fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
       map((event) => event.target.value),
+      startWith(''),
       // The DebounceTimeoperator enforces stability, similar to the ExhaustMap operator
       // that is used with DOM elements.
       // To use the DebounceTimeoperator, you would specify an interval and then any
@@ -55,14 +59,17 @@ export class CourseComponent implements OnInit, AfterViewInit {
       debounceTime(400),
       // The DistinctUntilChanged operator will emit only one value if 2 values in the input stream are exactly the same
       distinctUntilChanged(),
+      // We didn't have to use the Concat operator and 2 separate observables making HTTP requests (one for the initial
+      // value, and the other for the stream) as we had done previously. We could have just used the startsWith operator
+      // to initialize the stream with a value that would be used for the initial HTTP request
       // concatMap((event) => this.filterCourse(event.target.value)),
       // map((res) => (this.lessons$ = of(res.payload)))
       switchMap((value) => this.loadLessons(value))
     );
 
-    const initialLessons$ = this.loadLessons();
-    // TODO: Figure out why the order of the parameters to this concat function matters!!!
-    this.lessons$ = concat(initialLessons$, searchLessons$);
+    // const initialLessons$ = this.loadLessons();
+    // // TODO: Figure out why the order of the parameters to this concat function matters!!!
+    // this.lessons$ = concat(initialLessons$, searchLessons$);
   }
 
   loadLessons(search = '') {
