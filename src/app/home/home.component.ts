@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { throwError } from 'rxjs';
 import { Observable } from 'rxjs/internal/Observable';
-import { catchError, finalize, map, shareReplay, tap } from 'rxjs/operators';
+import { delay, map, retryWhen, shareReplay, tap } from 'rxjs/operators';
 import { createHttpObservable } from '../common/util';
 import { Course } from '../model/course';
 
@@ -27,11 +26,19 @@ export class HomeComponent implements OnInit {
       // We share the execution of the http$ observable between its
       // 2 subscriptions from the first operator in the operators chain
       // until the shareReplay operator
-      catchError((err) => throwError(err)),
-      finalize(() => console.log('finalize called')),
+      // catchError((err) => throwError(err)),
+      // finalize(() => console.log('finalize called')),
       tap(() => console.log('HTTP Request executed')),
       map((res) => res.payload),
-      shareReplay()
+      shareReplay(),
+      // The RetryWhen operator will attempt to create a new stream and subscribe to it.
+      // It will continue to attempt to do this until the stream no longer error out.
+      // The first parameter is an error handler function that should return an observable
+      // retryWhen((errors) => errors.pipe(delayWhen(() => timer(2000))))
+
+      // In this case, the author did not need to use DelayWhen since he didn't return a
+      // different delay interval for each item in the stream. He should have just used Delay instead
+      retryWhen((errors) => errors.pipe(delay(2000)))
     );
 
     this.beginnerCourses$ = courses$.pipe(
