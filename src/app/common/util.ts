@@ -1,8 +1,13 @@
 import { Observable } from 'rxjs/internal/Observable';
 import { Course } from '../model/course';
+import { Lesson } from '../model/lesson';
+
+// Intersection types use & not | 🤦‍♂️
+type CourseData = { payload: Course[] } & Course[] & Course;
+type LessonData = { payload: Lesson[] } & Lesson[] & Lesson;
 
 export function createHttpObservable(url: string) {
-  return new Observable<{ payload: Course[] }>((observer) => {
+  return new Observable<CourseData & LessonData>((observer) => {
     // The AbortController in this example is provided by the fetch API
     const controller = new AbortController();
     // The AbortController signal sends a signal to the browser to cancel the HTTP request when it emits a value of true
