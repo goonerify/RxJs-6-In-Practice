@@ -15,6 +15,13 @@ export function createHttpObservable(url: string) {
 
     fetch(url, { signal })
       .then((response) => {
+        // Manually check for error response since Fetch API will
+        // only treat network errors as errors
+        // Reference: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#checking_that_the_fetch_was_successful
+        if (!response.ok) {
+          return observer.error(response.statusText);
+        }
+
         return response.json();
       })
       .then((data) => {
@@ -22,6 +29,8 @@ export function createHttpObservable(url: string) {
         observer.complete();
       })
       .catch((err) => {
+        // Fetch API only catches network errors!!!
+        // Reference: https://www.tjvantoll.com/2015/09/13/fetch-and-errors/
         observer.error(err);
       });
 
