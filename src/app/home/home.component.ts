@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { of } from 'rxjs';
+import { throwError } from 'rxjs';
 import { Observable } from 'rxjs/internal/Observable';
-import { catchError, map, shareReplay, tap } from 'rxjs/operators';
+import { catchError, finalize, map, shareReplay, tap } from 'rxjs/operators';
 import { createHttpObservable } from '../common/util';
 import { Course } from '../model/course';
 
@@ -23,10 +23,15 @@ export class HomeComponent implements OnInit {
     // Without subscribing to an observable, all you have
     // is a 'declaration' of the observable
     const courses$ = http$.pipe(
+      // By placing catchError and finalize above shareReplay operator
+      // We share the execution of the http$ observable between its
+      // 2 subscriptions from the first operator in the operators chain
+      // until the shareReplay operator
+      catchError((err) => throwError(err)),
+      finalize(() => console.log('finalize called')),
       tap(() => console.log('HTTP Request executed')),
       map((res) => res.payload),
-      shareReplay(),
-      catchError((err) => of([]))
+      shareReplay()
     );
 
     this.beginnerCourses$ = courses$.pipe(

@@ -16,7 +16,7 @@ export function createHttpObservable(url: string) {
     fetch(url, { signal })
       .then((response) => {
         // Manually check for error response since Fetch API will
-        // only treat network errors as errors
+        // only treat network/DNS/fatal errors as errors
         // Reference: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#checking_that_the_fetch_was_successful
         if (!response.ok) {
           return observer.error(response.statusText);
@@ -29,7 +29,8 @@ export function createHttpObservable(url: string) {
         observer.complete();
       })
       .catch((err) => {
-        // Fetch API only catches network errors!!!
+        // Fetch API only catches network/DNS/fatal errors!!! i.e errors that
+        // the browser cannot recover from
         // Reference: https://www.tjvantoll.com/2015/09/13/fetch-and-errors/
         observer.error(err);
       });
