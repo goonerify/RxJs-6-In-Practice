@@ -24,7 +24,7 @@ export class HomeComponent implements OnInit {
     const courses$ = http$.pipe(
       // By placing catchError and finalize above shareReplay operator
       // We share the execution of the http$ observable between its
-      // 2 subscriptions from the first operator in the operators chain
+      // 2 subscriptions from the first operator in the observable chain
       // until the shareReplay operator
       // catchError((err) => throwError(err)),
       // finalize(() => console.log('finalize called')),

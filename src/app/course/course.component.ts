@@ -45,9 +45,9 @@ export class CourseComponent implements OnInit, AfterViewInit {
     this.lessons$ = fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
       map((event) => event.target.value),
       startWith(''),
-      // The DebounceTimeoperator enforces stability, similar to the ExhaustMap operator
+      // The DebounceTime operator enforces stability, similar to the ExhaustMap operator
       // that is used with DOM elements.
-      // To use the DebounceTimeoperator, you would specify an interval and then any
+      // To use the DebounceTime operator, you would specify an interval and then any
       // data entering the input stream during the interval must remain stable to be
       // emitted by the observable. If new data enters the input stream then the previous data is ignored.
 
