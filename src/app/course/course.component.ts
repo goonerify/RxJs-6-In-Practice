@@ -14,6 +14,7 @@ import {
   startWith,
   switchMap,
 } from 'rxjs/operators';
+import { debug, RxJsLoggingLevel, setRxJsLoggingLevel } from '../common/debug';
 import { createHttpObservable } from '../common/util';
 import { Course } from '../model/course';
 import { Lesson } from '../model/lesson';
@@ -30,11 +31,15 @@ export class CourseComponent implements OnInit, AfterViewInit {
 
   @ViewChild('searchInput', { static: true }) input: ElementRef;
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(private route: ActivatedRoute) {
+    setRxJsLoggingLevel(RxJsLoggingLevel.DEBUG);
+  }
 
   ngOnInit() {
     this.courseId = this.route.snapshot.params['id'];
-    this.course$ = createHttpObservable(`/api/courses/${this.courseId}`);
+    this.course$ = createHttpObservable(`/api/courses/${this.courseId}`).pipe(
+      debug(RxJsLoggingLevel.INFO, 'course value')
+    );
     // this.lessons$ = createHttpObservable(
     //   `/api/lessons?courseId=${this.courseId}&pageSize=100`
     // ).pipe(map((res) => res.payload));
@@ -45,6 +50,7 @@ export class CourseComponent implements OnInit, AfterViewInit {
     this.lessons$ = fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
       map((event) => event.target.value),
       startWith(''),
+      debug(RxJsLoggingLevel.TRACE, 'search'),
       // The DebounceTime operator enforces stability, similar to the ExhaustMap operator
       // that is used with DOM elements.
       // To use the DebounceTime operator, you would specify an interval and then any
@@ -57,14 +63,21 @@ export class CourseComponent implements OnInit, AfterViewInit {
       // This solves the problem of Double entry in a TypeAhead from holding down the
       // shift key
       debounceTime(400),
-      // The DistinctUntilChanged operator will emit only one value if 2 values in the input stream are exactly the same
+      // The DistinctUntilChanged operator will emit only one value if 2 or more values in
+      // the input stream are exactly the same
       distinctUntilChanged(),
-      // We didn't have to use the Concat operator and 2 separate observables making HTTP requests (one for the initial
-      // value, and the other for the stream) as we had done previously. We could have just used the startsWith operator
-      // to initialize the stream with a value that would be used for the initial HTTP request
+      // We didn't have to use the Concat operator and 2 separate observables making HTTP
+      // requests (one for the initial value, and the other for the stream) as we had done
+      // previously. We could have just used the startsWith operator to initialize the stream
+      // with a value that would be used for the initial HTTP request
       // concatMap((event) => this.filterCourse(event.target.value)),
       // map((res) => (this.lessons$ = of(res.payload)))
-      switchMap((value) => this.loadLessons(value))
+
+      // SwitchMap will cancel an ongoing HTTP requests if new data enters the input stream.
+      // It will then send a new HTTP request with the latest data from the input stream
+      // Compare switchMap vs concatMap and mergeMap in your udemy course notes
+      switchMap((value) => this.loadLessons(value)),
+      debug(RxJsLoggingLevel.DEBUG, 'lessons value')
     );
 
     // const initialLessons$ = this.loadLessons();
